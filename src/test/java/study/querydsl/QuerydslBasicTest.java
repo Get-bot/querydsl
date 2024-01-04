@@ -581,4 +581,90 @@ public class QuerydslBasicTest {
         return ageCond != null ? member.age.eq(ageCond) : null;
     }
 
+    @Test
+    public void bulkUpdate() {
+        //member1 = 10 -> 비회원
+        //member2 = 20 -> 비회원
+        //member3 = 30 -> 유지
+        //member4 = 40 -> 유지
+
+        long count = queryFactory
+                .update(member)
+                .set(member.username, "비회원")
+                .where(member.age.lt(30))
+                .execute();
+
+        assertEquals(count, 2);
+
+        em.flush();
+        em.clear();
+
+        List<Member> fetch = queryFactory
+                .selectFrom(member)
+                .fetch();
+
+        fetch.forEach(System.out::println);
+    }
+
+    @Test
+    public void bulkAdd() {
+        long count = queryFactory
+                .update(member)
+                .set(member.age, member.age.add(1)) //더하기
+                .execute();
+
+        assertEquals(count, 4);
+
+        em.flush();
+        em.clear();
+
+        List<Member> fetch = queryFactory
+                .selectFrom(member)
+                .fetch();
+
+        fetch.forEach(System.out::println);
+    }
+
+    @Test
+    public void bulkDelete() {
+        long count = queryFactory
+                .delete(member)
+                .where(member.age.gt(18))
+                .execute();
+
+        assertEquals(count, 3);
+
+        em.flush();
+        em.clear();
+
+        List<Member> fetch = queryFactory
+                .selectFrom(member)
+                .fetch();
+
+        fetch.forEach(System.out::println);
+    }
+
+    @Test
+    public void sqlFunction() {
+        List<String> fetch = queryFactory
+                .select(Expressions.stringTemplate("function('replace', {0}, {1}, {2})",
+                        member.username, "member", "M"))
+                .from(member)
+                .fetch();
+
+        fetch.forEach(System.out::println);
+    }
+
+    @Test
+    public void sqlFunction2() {
+        List<String> fetch = queryFactory
+                .select(member.username)
+                .from(member)
+                //.where(member.username.eq(Expressions.stringTemplate("function('lower', {0})", member.username)))
+                .where(member.username.eq(member.username.lower()))
+                .fetch();
+
+        fetch.forEach(System.out::println);
+    }
+
 }
